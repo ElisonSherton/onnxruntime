@@ -2,10 +2,11 @@ ARG ROCM_VERSION=5.6
 
 FROM rocm/dev-ubuntu-22.04:${ROCM_VERSION}-complete
 
-# Upgrade to meet security requirements
-RUN apt-get update -y && apt-get upgrade -y && apt-get autoremove -y && apt-get clean -y
+ARG ROCM_VERSION
 
-RUN apt-get update && apt-get install  -y cifs-utils wget git && \
+# Upgrade to meet security requirements
+RUN apt-get update -y && apt-get upgrade -y && apt-get autoremove -y && \
+    apt-get install  -y cifs-utils wget git && \
     apt-get clean -y
 
 WORKDIR /stage
@@ -34,7 +35,7 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86
 # Create rocm-ci environment
 ENV CONDA_ENVIRONMENT_PATH /opt/miniconda/envs/rocm-ci
 ENV CONDA_DEFAULT_ENV rocm-ci
-RUN conda create -y -p $CONDA_ENVIRONMENT_PATH python=3.8
+RUN conda create -y -p $CONDA_DEFAULT_ENV python=3.8
 ENV PATH $CONDA_ENVIRONMENT_PATH/bin:${PATH}
 
 # Enable rocm-ci environment
@@ -66,6 +67,7 @@ RUN git clone https://github.com/ROCmSoftwarePlatform/cupy && cd cupy && \
     git submodule update --init && \
     pip install -e . --no-cache-dir -vvvv
 
+##### Install transformers to run tests
 # rocm-ci branch contains instrumentation needed for loss curves and perf
 RUN git clone https://github.com/microsoft/huggingface-transformers.git &&\
     cd huggingface-transformers &&\
